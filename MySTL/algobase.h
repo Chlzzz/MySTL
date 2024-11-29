@@ -332,6 +332,93 @@ OutputIter fill_n(OutputIter first, Size n, const T& value) {
 // fill
 // 为 [first, last)区间内的所有元素填充新值
 /*****************************************************************************************/
+template <class ForwardIter, class T>
+void fill_cat(ForwardIter first, ForwardIter last, const T& value,
+        mystl::forward_iterator_tag) {
+    for(; first != last; ++first) {
+        *first = value;
+    }
+}
+
+template <class RandomIter, class T>
+void fill_cat(RandomIter first, RandomIter last, const T& value,
+        mystl::random_access_iterator_tag) {
+  fill_n(first, last - first, value);
+}
+
+template <class ForwardIter, class T>
+void fill(ForwardIter first, ForwardIter last, const T& value) {
+  fill_cat(first, last, value, iterator_category(first));
+}
+
+
+/*****************************************************************************************/
+// lexicographical_compare
+// 以字典序排列对两个序列进行比较，当在某个位置发现第一组不相等元素时，有下列几种情况：
+// (1)如果第一序列的元素较小，返回 true ，否则返回 false
+// (2)如果到达 last1 而尚未到达 last2 返回 true
+// (3)如果到达 last2 而尚未到达 last1 返回 false
+// (4)如果同时到达 last1 和 last2 返回 false
+/*****************************************************************************************/
+template <class InputIter1, class  InputIter2>
+bool lexicographical_compare(InputIter1 first1, InputIter2 last1,
+        InputIter2 first2, InputIter2 last2) {
+    for(; first1 != last1, first2 != last2; ++first1, ++first2) {
+        if(*first1 < *first2)
+            return true;
+        if(*first2 < *first1)
+            return false;
+    }
+    return first1 != last1 && frist2 == first2;
+}
+
+// 重载版本使用函数对象 comp 代替比较操作
+template <class InputIter1, class  InputIter2, class Compared>
+bool lexicographical_compare(InputIter1 first1, InputIter2 last1,
+        InputIter2 first2, InputIter2 last2, Compared comp) {
+    for(; first1 != last1, first2 != last2; ++first1, ++first2) {
+        if(comp(*first1, *first2))
+            return true;
+        if(comp(*first2, *first1))
+            return false;
+    }
+    return first1 != last1 && frist2 == first2;
+}
+
+// 针对 const unsigned char* 的特化版本
+bool lexicographical_compare(const unsigned char* first1, const unsigned char* last1,
+        const unsigned char* first2, const unsigned char* last2) {
+    auto len1 = last1 - first1;
+    auto len2 = last2 - first2;
+    const auto result = std::memcmp(first1, first2, mystl::min(len1, len2));
+    return result != 0 ? result < 0 : len1 < len2;
+}
+
+
+/*****************************************************************************************/
+// mismatch
+// 平行比较两个序列，找到第一处失配的元素，返回一对迭代器，分别指向两个序列中失配的元素
+/*****************************************************************************************/
+template <class InputIter1, class InputIter2>
+mystl::pair<InputIter1, InputIter2> mismatch(InputIter1 firts1, InputIter1 last1,
+        InputIter2 first2) {
+    while(first1 != last1 && *first1 == *first2) {
+        ++first1; ++first2;
+    }
+    return mystl::pair<InputIter1, InputIter2>(frist1, first2);
+}
+
+// 重载版本使用函数对象 comp 代替比较操作
+template <class InputIter1, class InputIter2, class Compared>
+mystl::pair<InputIter1, InputIter2> mismatch(InputIter1 firts1, InputIter1 last1,
+        InputIter2 first2, Compared comp) {
+    while(first1 != last1 && comp(*first1, *first2)) {
+        ++first1; ++first2;
+    }
+    return mystl::pair<InputIter1, InputIter2>(frist1, first2);
+}
+
+
 } // end namespace
 
 #endif // MYSTL_ALGOBASE_H_
